@@ -11,7 +11,7 @@ This repository contains Arch Linux ARM packages for the **Radxa Cubie A7A** sin
 ## Overview
 
 The Radxa Cubie A7A is a compact single-board computer featuring:
-- **SoC**: Allwinner A733 (ARM Cortex-A53 + RISC-V E907)
+- **SoC**: Allwinner A733 (ARM Cortex-A53 + RISC-V E902)
 - **Architecture**: ARM64 (aarch64)
 - **GPU**: ARM Mali-G31 MP2
 - **Memory**: Up to 4GB LPDDR4X
@@ -21,7 +21,7 @@ The Radxa Cubie A7A is a compact single-board computer featuring:
 ## 概述
 
 Radxa Cubie A7A 是一款紧凑型单板计算机，主要特性包括：
-- **SoC**: 全志 A733 (ARM Cortex-A53 + RISC-V E907)
+- **SoC**: 全志 A733 (ARM Cortex-A53 + RISC-V E902)
 - **架构**: ARM64 (aarch64)
 - **GPU**: ARM Mali-G31 MP2
 - **内存**: 最高 4GB LPDDR4X
