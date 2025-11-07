@@ -1,0 +1,31 @@
+post_install() {
+  cat << EOF
+===> U-Boot for Radxa Cubie A7A has been installed.
+
+     To install U-Boot to your SD card, run as root:
+
+     # cd /usr/lib/u-boot/radxa-cubie-a7a
+     # ./setup.sh update_bootloader /dev/sdX
+
+     Or manually:
+     
+     # dd if=/usr/lib/u-boot/radxa-cubie-a7a/boot0_sdcard.bin \\
+          of=/dev/sdX bs=512 seek=256 conv=fsync
+     
+     # dd if=/usr/lib/u-boot/radxa-cubie-a7a/boot_package.fex \\
+          of=/dev/sdX bs=512 seek=24576 conv=fsync
+
+     Replace /dev/sdX with your SD card device (e.g., /dev/mmcblk0).
+     
+     WARNING: This will overwrite data on your SD card!
+
+     Offsets explained:
+       boot0_sdcard.bin: 128KB (sector 256)
+       boot_package.fex: 12MB (sector 24576)
+
+EOF
+}
+
+post_upgrade() {
+  post_install
+}

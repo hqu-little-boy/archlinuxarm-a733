@@ -1,0 +1,366 @@
+# linux: Radxa Cubie A7A (Allwinner A733)
+# Maintainer: hqu-little-boy <zengpf.wang@gmail.com>
+
+pkgbase=linux-a733
+
+_kernelcommit_short=97efcde2d91e
+_bspcommit_short=01712e3
+_devicecommit_short=215855f
+
+_kernelcommit_full=97efcde2d91e7535358e5266e3ef14b0728f711a
+_bspcommit_full=01712e3785198507285f485a8bfae191aa08139c
+_devicecommit_full=215855f9330ca6234927e3f9005d794174a42294
+_srcname=kernel-${_kernelcommit_full}
+_bspname=allwinner-bsp-${_bspcommit_full}
+_devicename=allwinner-device-${_devicecommit_full}
+_kernelname=${pkgbase#linux}
+pkgver=5.15.147
+pkgrel=1
+pkgdesc='Linux kernel for Allwinner A733 (Radxa Cubie A7A)'
+url="https://github.com/radxa/kernel"
+arch=(aarch64)
+license=(GPL-2.0-only)
+makedepends=(
+  bc
+  cpio
+  dtc
+  kmod
+  python
+)
+options=('!strip')
+
+source=(
+  "kernel-${_kernelcommit_short}.tar.gz::https://github.com/radxa/kernel/archive/${_kernelcommit_short}.tar.gz"
+  "allwinner-bsp-${_bspcommit_short}.tar.gz::https://github.com/radxa/allwinner-bsp/archive/${_bspcommit_short}.tar.gz"
+  "allwinner-device-${_devicecommit_short}.tar.gz::https://github.com/radxa/allwinner-device/archive/${_devicecommit_short}.tar.gz"
+  '0001-bsp-cedar-ve-fix-include.patch'
+  '0002-kernel-bsp-integration.patch'
+  'config'
+  'linux-a733.preset'
+  'linux-a733.install'
+)
+
+sha256sums=(
+  'SKIP'  
+  'SKIP'  
+  'SKIP'  
+  'df00a0a4782f98690b24eb9a8ec94ed4e2ea5284dc016ec690948bb122b0836a'  
+  'bb4cf1611cc2384704536c5700aae23bf004f6499345821f19efdd34033decdf'  
+  'c8052e817d72dddbaccbe44f6a98e5855687c9c9e56f97ccc5791d929d8eeca0'  
+  '184ee4f680eb32c99f159773b711cff200426cec7a565bd04711558ca74c381e'  
+  'aab6ef60729392cef11af9d1e8a4480c6a01a012a8963d95fd9cf8d761d72a24'  
+)
+
+
+_kernel=Image
+KARCH=arm64
+_image=Image
+
+prepare() {
+  cd "${srcdir}"
+  
+  msg2 "组织源码目录结构..."
+  
+  
+  [ -d "kernel" ] && rm -rf kernel
+  [ -d "bsp" ] && rm -rf bsp
+  [ -d "device-a733" ] && rm -rf device-a733
+  
+  
+  
+  local kernel_extracted=$(find . -maxdepth 1 -type d -name "kernel-*" | head -1)
+  local bsp_extracted=$(find . -maxdepth 1 -type d -name "allwinner-bsp-*" | head -1)
+  local device_extracted=$(find . -maxdepth 1 -type d -name "allwinner-device-*" | head -1)
+  
+  [ -n "$kernel_extracted" ] && mv "$kernel_extracted" kernel
+  [ -n "$bsp_extracted" ] && mv "$bsp_extracted" bsp
+  [ -n "$device_extracted" ] && mv "$device_extracted" device-a733
+  
+  msg2 "应用 BSP 补丁..."
+  cd bsp
+  patch -p1 -i "${srcdir}/0001-bsp-cedar-ve-fix-include.patch"
+  cd ..
+  
+  msg2 "应用内核 BSP 集成补丁..."
+  cd kernel
+  patch -p1 -i "${srcdir}/0002-kernel-bsp-integration.patch"
+  
+  
+  ln -sf ../bsp bsp
+  ln -sf ../device-a733 device-a733
+  
+  
+  msg2 "修复 sound 驱动头文件路径..."
+  if [ -f bsp/drivers/sound/adapter/snd_sunxi_pcm_adapter.c ]; then
+    sed -i 's|#include "snd_sunxi_log.h"|#include "../platform/snd_sunxi_log.h"|g' \
+        bsp/drivers/sound/adapter/snd_sunxi_pcm_adapter.c
+  fi
+  if [ -f bsp/drivers/sound/adapter/snd_sunxi_adapter.c ]; then
+    sed -i 's|#include "snd_sunxi_log.h"|#include "../platform/snd_sunxi_log.h"|g' \
+        bsp/drivers/sound/adapter/snd_sunxi_adapter.c
+  fi
+  
+  
+  msg2 "修复 gmac trace 头文件路径..."
+  if [ -f bsp/drivers/gmac/sunxi-gmac-trace.h ]; then
+    
+    sed -i '/^#undef TRACE_INCLUDE_PATH/d' bsp/drivers/gmac/sunxi-gmac-trace.h
+    sed -i '/^#define TRACE_INCLUDE_PATH/d' bsp/drivers/gmac/sunxi-gmac-trace.h
+    sed -i '/#define TRACE_INCLUDE_FILE/i #undef TRACE_INCLUDE_PATH\n#define TRACE_INCLUDE_PATH ../../bsp/drivers/gmac' \
+        bsp/drivers/gmac/sunxi-gmac-trace.h
+  fi
+  
+  
+  msg2 "修复 USB host 驱动头文件路径..."
+  if [ -f bsp/drivers/usb/host/sunxi-hci.h ]; then
+    sed -i 's|#include <../sunxi_usb/include/sunxi_usb_debug.h>|#include "../../bsp/drivers/usb/sunxi_usb/include/sunxi_usb_debug.h"|g' \
+        bsp/drivers/usb/host/sunxi-hci.h
+  fi
+  
+  
+  msg2 "添加 A733 设备树到 Makefile..."
+  if [ -f arch/arm64/boot/dts/allwinner/Makefile ]; then
+    if ! grep -q "sun60i-a733-cubie-a7a.dtb" arch/arm64/boot/dts/allwinner/Makefile; then
+      echo "dtb-\$(CONFIG_ARCH_SUNXI) += sun60i-a733-cubie-a7a.dtb" >> arch/arm64/boot/dts/allwinner/Makefile
+    fi
+  fi
+  
+  
+  msg2 "检查 ramfs..."
+  if [ -d "../bsp/ramfs" ]; then
+    
+    ramfs_dir=$(find ../bsp/ramfs -maxdepth 1 -type d -name "*aarch64*" 2>/dev/null | head -1)
+    if [ -n "$ramfs_dir" ] && [ -d "$ramfs_dir" ]; then
+      ramfs_name=$(basename "$ramfs_dir")
+      if [ ! -f "../bsp/ramfs/${ramfs_name}.cpio.gz" ]; then
+        msg2 "创建 ramfs from $ramfs_name..."
+        (cd "$ramfs_dir" && find . | cpio -o -Hnewc 2>/dev/null | gzip > ../${ramfs_name}.cpio.gz)
+      fi
+    else
+      msg2 "警告: 未找到 aarch64 ramfs 目录，跳过"
+    fi
+  fi
+  
+  
+  mkdir -p ../bsp/include
+  echo "#define AW_BSP_VERSION \"${pkgver}-${pkgrel}-ARCH, Arch Linux ARM\"" \
+      > ../bsp/include/sunxi-autogen.h
+  
+  echo "Setting version..."
+  echo "-$pkgrel" > localversion.10-pkgrel
+  echo "${pkgbase#linux}" > localversion.20-pkgname
+  
+  msg2 "配置内核..."
+  export BSP_TOP="${srcdir}/bsp/"
+  export LICHEE_KERN_DIR="${srcdir}/kernel/"
+  
+  
+  msg2 "复制配置文件..."
+  cp "${srcdir}/config" .config
+  
+  
+  msg2 "清理旧编译文件..."
+  make mrproper || true
+  make clean || true
+  
+  
+  cp "${srcdir}/config" .config
+  
+  
+  msg2 "调整配置以支持本机编译..."
+  scripts/config --disable CONFIG_DRM_NOUVEAU
+  scripts/config --disable CONFIG_DRM_NOUVEAU_BACKLIGHT
+  scripts/config --set-val CONFIG_DRM_NOUVEAU n
+  
+  
+  make olddefconfig
+  
+  make -s kernelrelease > version
+  echo "Prepared $pkgbase version $(<version)"
+}
+
+build() {
+  cd "${srcdir}/kernel"
+  
+  export ARCH=arm64
+  export BSP_TOP="${srcdir}/bsp/"
+  export LICHEE_KERN_DIR="${srcdir}/kernel/"
+  
+  
+  msg2 "清理之前的编译产物..."
+  make clean || true
+  
+  
+  find . -name "*.o" -delete 2>/dev/null || true
+  find . -name "built-in.a" -delete 2>/dev/null || true
+  
+  msg2 "编译内核和模块（本机编译）..."
+  
+  make ${MAKEFLAGS} Image dtbs modules -j4
+  
+  msg2 "编译 A733 设备树..."
+  
+  if [ ! -f arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7a.dtb ]; then
+    cpp -nostdinc \
+        -I arch/arm64/boot/dts -I arch/arm64/boot/dts/allwinner \
+        -Iinclude -I./arch/arm64/include \
+        -undef -x assembler-with-cpp \
+        arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7a.dts | \
+    scripts/dtc/dtc -I dts -O dtb \
+        -o arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7a.dtb - 2>/dev/null
+  fi
+}
+
+_package() {
+  pkgdesc="Linux kernel and modules for Allwinner A733 (Radxa Cubie A7A)"
+  depends=(
+    coreutils
+    kmod
+    'mkinitcpio>=0.7'
+  )
+  optdepends=(
+    'linux-firmware: firmware images needed for some devices'
+    'wireless-regdb: to set the correct wireless channels of your country'
+  )
+  provides=(
+    linux="${pkgver}"
+    WIREGUARD-MODULE
+  )
+  conflicts=(
+    linux
+  )
+  install=${pkgbase}.install
+  backup=(
+    boot/extlinux/extlinux.conf
+  )
+
+  cd "${srcdir}/kernel"
+  local modulesdir="$pkgdir/usr/lib/modules/$(<version)"
+
+  
+  echo "$pkgbase" | install -Dm644 /dev/stdin "$modulesdir/pkgbase"
+
+  echo "Installing modules..."
+  make INSTALL_MOD_PATH="$pkgdir/usr" INSTALL_MOD_STRIP=1 \
+    DEPMOD=/doesnt/exist modules_install  
+
+  
+  rm -f "$modulesdir"/build
+
+  echo "Installing boot image and device tree..."
+  install -Dm644 arch/$KARCH/boot/$_image "${pkgdir}/boot/${_image}"
+  install -Dm644 arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7a.dtb \
+      "${pkgdir}/boot/dtbs/allwinner/sun60i-a733-cubie-a7a.dtb"
+
+  
+  local _subst="
+    s|%PKGBASE%|${pkgbase}|g
+    s|%KERNVER%|$(<version)|g
+  "
+
+  
+  sed "${_subst}" "${srcdir}/linux-a733.preset" |
+    install -Dm644 /dev/stdin "${pkgdir}/etc/mkinitcpio.d/${pkgbase}.preset"
+
+  
+  install -Dm644 /dev/stdin "${pkgdir}/boot/extlinux/extlinux.conf" <<EOF
+label Arch Linux ARM
+    kernel /Image
+    fdt /dtbs/allwinner/sun60i-a733-cubie-a7a.dtb
+    append console=ttyAS0,115200 earlycon=uart8250,mmio32,0x02500000 root=/dev/mmcblk0p2 rw rootwait
+EOF
+
+  
+  touch "${pkgdir}/usr/lib/modules/$(<version)/vmlinuz"
+}
+
+_package-headers() {
+  pkgdesc="Headers and scripts for building modules for Allwinner A733 kernel"
+  provides=("linux-headers=${pkgver}")
+  conflicts=('linux-headers')
+
+  cd "${srcdir}/kernel"
+  local builddir="$pkgdir/usr/lib/modules/$(<version)/build"
+
+  echo "Installing build files..."
+  install -Dt "$builddir" -m644 .config Makefile Module.symvers System.map \
+    localversion.* version
+  install -Dt "$builddir/kernel" -m644 kernel/Makefile
+  install -Dt "$builddir/arch/$KARCH" -m644 "arch/$KARCH/Makefile"
+  cp -t "$builddir" -a scripts
+
+  
+  mkdir -p "$builddir"/{fs/xfs,mm}
+
+  echo "Installing headers..."
+  cp -t "$builddir" -a include
+  cp -t "$builddir/arch/$KARCH" -a "arch/$KARCH/include"
+  install -Dt "$builddir/arch/$KARCH/kernel" -m644 "arch/$KARCH/kernel/asm-offsets.s"
+
+  install -Dt "$builddir/drivers/md" -m644 drivers/md/*.h
+  install -Dt "$builddir/net/mac80211" -m644 net/mac80211/*.h
+
+  
+  install -Dt "$builddir/drivers/media/i2c" -m644 drivers/media/i2c/msp3400-driver.h
+
+  
+  install -Dt "$builddir/drivers/media/usb/dvb-usb" -m644 drivers/media/usb/dvb-usb/*.h
+  install -Dt "$builddir/drivers/media/dvb-frontends" -m644 drivers/media/dvb-frontends/*.h
+  install -Dt "$builddir/drivers/media/tuners" -m644 drivers/media/tuners/*.h
+
+  
+  install -Dt "$builddir/drivers/iio/common/hid-sensors" -m644 drivers/iio/common/hid-sensors/*.h
+
+  echo "Installing KConfig files..."
+  find . -name 'Kconfig*' -exec install -Dm644 {} "$builddir/{}" \;
+
+  echo "Removing unneeded architectures..."
+  local _arch
+  for _arch in "$builddir"/arch/*/; do
+    [[ $_arch = */"$KARCH"/ || $_arch == */arm/ ]] && continue
+    echo "Removing $(basename "$_arch")"
+    rm -r "$_arch"
+  done
+
+  echo "Symlinking common aliases..."
+  ln -sr "$builddir/arch/arm" "$builddir/arch/armv7h" 2>/dev/null || true
+  ln -sr "$builddir/arch/arm" "$builddir/arch/armv7l" 2>/dev/null || true
+  ln -sr "$builddir/arch/arm64" "$builddir/arch/aarch64"
+
+  echo "Removing documentation..."
+  rm -r "$builddir/Documentation"
+
+  echo "Removing broken symlinks..."
+  find -L "$builddir" -type l -printf 'Removing %P\n' -delete
+
+  echo "Removing loose objects..."
+  find "$builddir" -type f -name '*.o' -printf 'Removing %P\n' -delete
+
+  echo "Stripping build tools..."
+  local file
+  while read -rd '' file; do
+    case "$(file -Sib "$file")" in
+      application/x-sharedlib\;*)      
+        strip -v $STRIP_SHARED "$file" ;;
+      application/x-archive\;*)        
+        strip -v $STRIP_STATIC "$file" ;;
+      application/x-executable\;*)     
+        strip -v $STRIP_BINARIES "$file" ;;
+      application/x-pie-executable\;*) 
+        strip -v $STRIP_SHARED "$file" ;;
+    esac
+  done < <(find "$builddir" -type f -perm -u+x -print0)
+
+  echo "Adding symlink..."
+  mkdir -p "$pkgdir/usr/src"
+  ln -sr "$builddir" "$pkgdir/usr/src/$pkgbase"
+}
+
+pkgname=("${pkgbase}" "${pkgbase}-headers")
+for _p in ${pkgname[@]}; do
+  eval "package_${_p}() {
+    _package${_p#${pkgbase}}
+  }"
+done
+
+

@@ -1,0 +1,20 @@
+post_install () {
+  post_upgrade
+}
+
+post_upgrade() {
+  if grep "^[^#]*[[:space:]]/boot" etc/fstab 2>&1 >/dev/null; then
+    if ! grep "[[:space:]]/boot" etc/mtab 2>&1 >/dev/null; then
+      cat <<END
+
+>>> WARNING: /boot appears to be a separate partition but is not mounted.
+    You probably just broke your system. Congratulations.
+
+END
+    fi
+  fi
+}
+
+post_remove() {
+  rm -f boot/initramfs-linux.img
+}

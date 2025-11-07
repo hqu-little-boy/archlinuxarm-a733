@@ -1,0 +1,25 @@
+--- a/Makefile
++++ b/Makefile
+@@ -34,12 +34,13 @@ MARCH_FLAGS ?=-mhard-mul -msoft-div -msoft-float
+ 
+ else ifneq ($(CFG_RISCV),)
+-PATH :=$(CURDIR)/tools/riscv64-elf-x86_64-20201104/bin/:$(PATH)
+-CC=riscv64-unknown-elf-gcc
+-LD=riscv64-unknown-elf-ld
+-AR=riscv64-unknown-elf-ar
+-OBJC=riscv64-unknown-elf-objcopy
+-OBJDUMP=riscv64-unknown-elf-objdump
+-NM=riscv64-unknown-elf-nm
+-SIZE=riscv64-unknown-elf-size
+-STRIP=riscv64-unknown-elf-strip
++RISCV_CROSS_COMPILE ?= $(CURDIR)/tools/riscv64-elf-x86_64-20201104/bin/riscv64-unknown-elf-
++PATH :=$(dir $(RISCV_CROSS_COMPILE)):$(PATH)
++CC=$(RISCV_CROSS_COMPILE)gcc
++LD=$(RISCV_CROSS_COMPILE)ld
++AR=$(RISCV_CROSS_COMPILE)ar
++OBJC=$(RISCV_CROSS_COMPILE)objcopy
++OBJDUMP=$(RISCV_CROSS_COMPILE)objdump
++NM=$(RISCV_CROSS_COMPILE)nm
++SIZE=$(RISCV_CROSS_COMPILE)size
++STRIP=$(RISCV_CROSS_COMPILE)strip
+

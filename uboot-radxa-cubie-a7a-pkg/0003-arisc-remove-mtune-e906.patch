@@ -1,0 +1,9 @@
+--- a/Makefile
++++ b/Makefile
+@@ -47,7 +47,7 @@ STRIP=$(RISCV_CROSS_COMPILE)strip
+ 
+-MARCH_FLAGS ?=-mtune=e906 -mcmodel=medany -mabi=ilp32e -march=rv32emc -fsingle-precision-constant
++MARCH_FLAGS ?=-mcmodel=medany -mabi=ilp32e -march=rv32emc -fsingle-precision-constant
+ MARCH_LD_FLAGS ?=-melf32lriscv
+ 
+ CFLAGS += -Iarch/riscv/includes/

@@ -1,0 +1,53 @@
+From 290bfe650e55cd251594a67d71f726f3dfc56b18 Mon Sep 17 00:00:00 2001
+From: Radxa A733 Builder <builder@radxa-a733.local>
+Date: Sat, 1 Nov 2025 20:30:08 +0800
+Subject: [PATCH] =?UTF-8?q?bsp:=20=E4=BF=AE=E5=A4=8D=E5=A4=B4=E6=96=87?=
+ =?UTF-8?q?=E4=BB=B6=E5=8C=85=E5=90=AB=E8=B7=AF=E5=BE=84?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+修复 BSP 驱动编译时的头文件包含问题：
+
+1. cedar-ve: 修复 platforms/ve_plat_common.c 找不到 cedar_ve.h
+2. sound: 修复 adapter/snd_sunxi_pcm_adapter.c 找不到 snd_sunxi_log.h
+
+在各 Makefile 中添加正确的头文件包含路径，使编译内核时不再需要
+额外的 EXTRA_CFLAGS 参数。
+
+Signed-off-by: Radxa A733 Builder <builder@radxa-a733.local>
+---
+ drivers/sound/platform/Makefile | 1 +
+ drivers/ve/cedar-ve/Makefile    | 3 ++-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/sound/platform/Makefile b/drivers/sound/platform/Makefile
+index 9876543..abcdefg 100644
+--- a/drivers/sound/platform/Makefile
++++ b/drivers/sound/platform/Makefile
+@@ -6,6 +6,7 @@
+ 
+ ccflags-y += -I $(srctree)/bsp/drivers/sound/pa/
+ ccflags-y += -I $(srctree)/bsp/drivers/sound/adapter
++ccflags-y += -I $(srctree)/bsp/drivers/sound/platform
+ ADPT_DIR := ../adapter
+ 
+ snd_soc_sunxi_component_sfx-objs		+= snd_sunxi_sfx.o
+
+diff --git a/drivers/ve/cedar-ve/Makefile b/drivers/ve/cedar-ve/Makefile
+index 2cd374b..cda96ca 100644
+--- a/drivers/ve/cedar-ve/Makefile
++++ b/drivers/ve/cedar-ve/Makefile
+@@ -3,7 +3,8 @@
+ # Makefile for the kernel multimedia device drivers.
+ #
+ 
+-# ccflags-y += -I $(srctree)/drivers/media/cedar-ve
++# 添加 cedar-ve 头文件包含路径
++ccflags-y += -I$(src)
+ ccflags-$(CONFIG_AW_VIDEO_DYNAMIC_DEBUG) += -DDYNAMIC_DEBUG_MODULE
+ 
+ obj-$(CONFIG_AW_VIDEO_ENCODER_DECODER) += sunxi-ve.o
+-- 
+2.51.1
+

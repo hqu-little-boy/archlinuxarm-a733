@@ -1,0 +1,11 @@
+--- a/arch/riscv/cpu/e907/crt0.S
++++ b/arch/riscv/cpu/e907/crt0.S
+@@ -96,7 +96,7 @@
+ # PART 3:initialize mtvec value
+   la    a3,__trap_handler
+   csrw  mtvec,a3
+-  csrw  mtvt,a3
++  csrw  0x307,a3  # mtvt (T-Head specific)
+ 
+   # enable mie
+   li   a3, 0x8

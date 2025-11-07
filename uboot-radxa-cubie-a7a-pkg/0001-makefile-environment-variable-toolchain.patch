@@ -1,0 +1,42 @@
+--- a/.github/local/Makefile.local
++++ b/.github/local/Makefile.local
+@@ -1,4 +1,4 @@
+-CROSS_COMPILE := $(CURDIR)/toolchains/gcc-linaro-7.2.1-2017.11-x86_64_arm-linux-gnueabi/bin/arm-linux-gnueabi-
++CROSS_COMPILE ?= $(CURDIR)/toolchains/gcc-linaro-7.2.1-2017.11-x86_64_arm-linux-gnueabi/bin/arm-linux-gnueabi-
+ CUSTOM_MAKE_DEFINITIONS := DTS_PATH=arch/arm/dts \
+ 	LICHEE_CHIP_CONFIG_DIR=/tmp \
+ 	LICHEE_PLAT_OUT=/tmp \
+@@ -179,7 +179,7 @@
+ %/scp.bin: %/arisc.config
+ 	rm -f arisc/ar100s/.config
+ 	ln -sf ../$< arisc/.config
+-	$(MAKE) -j$(shell nproc) -C arisc LICHEE_DRAMLIB_PATH=../../dramlib CFG_CHIP_PLATFORM=$(shell . $< && echo $${LICHEE_ARISC_DEFCONFIG%_*})
++	$(MAKE) -j$(shell nproc) -C arisc LICHEE_DRAMLIB_PATH=$(CURDIR)/dramlib CFG_CHIP_PLATFORM=$(shell . $< && echo $${LICHEE_ARISC_DEFCONFIG%_*})
+ 	mv arisc/ar100s/scp.bin $@
+ 
+ #
+@@ -195,7 +195,7 @@
+ #
+ 
+ src/boot_package-%.fex: src/boot_package-%.cfg
+-	cd ./src && ../tools/pack/pctools/linux/openssl/dragonsecboot -pack $(shell basename $<)
++	cd ./src && $(CURDIR)/tools/pack/pctools/linux/openssl/dragonsecboot -pack $(shell basename $<)
+ 	mv src/boot_package.fex $@
+ 
+ #
+@@ -230,9 +230,10 @@
+ 
+ # Placeholder to suppress boot warnings
+ # Does not work with `env save`
+ src/sys_partition_nor.bin:
+-	truncate -s 16M /tmp/gpt.img
+-	sgdisk -o -n 1:-128K:0 -c 1:env /tmp/gpt.img
+-	dd conv=notrunc,fsync if=/tmp/gpt.img of=$@ bs=512 count=34
++	truncate -s 16M $(CURDIR)/.tmp-gpt.img
++	sgdisk -o -n 1:-128K:0 -c 1:env $(CURDIR)/.tmp-gpt.img
++	dd conv=notrunc,fsync if=$(CURDIR)/.tmp-gpt.img of=$@ bs=512 count=34
++	rm -f $(CURDIR)/.tmp-gpt.img
+ 
+ #
+ # Device build targets
+

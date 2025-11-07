@@ -1,0 +1,121 @@
+--- a/arch/riscv/cpu/e907/e907_com.c
++++ b/arch/riscv/cpu/e907/e907_com.c
+@@ -6,6 +6,19 @@
+  */
+ 
+ #include "e907_com.h"
++
++/* T-Head vendor-specific CSR definitions for standard toolchain compatibility */
++#define STR(x) #x
++#define XSTR(x) STR(x)
++
++/* Redefine vendor CSRs as numeric values for inline assembly */
++#define CSR_MXSTATUS_NUM    "0x7c0"
++#define CSR_MEXSTATUS_NUM   "0x7e1"
++#define CSR_MHCR_NUM        "0x7c1"
++#define CSR_MTVT_NUM        "0x307"
++#define CSR_MNXTI_NUM       "0x345"
++#define CSR_MINTSTATUS_NUM  "0x346"
++
+ //extern vector_table;
+ irqhandle vectors[256];
+ 
+@@ -68,7 +81,7 @@ u32 __get_MXSTATUS(void)
+ {
+ u32 result;
+ 
+-__asm volatile("csrr %0, mxstatus" : "=r"(result));
++__asm volatile("csrr %0, 0x7c0" : "=r"(result));
+ return result;
+ }
+ 
+@@ -81,7 +94,7 @@ u32 __get_MEXSTATUS(void)
+ {
+ u32 result;
+ 
+-__asm volatile("csrr %0, mexstatus" : "=r"(result));
++__asm volatile("csrr %0, 0x7e1" : "=r"(result));
+ return result;
+ }
+ 
+@@ -102,7 +115,7 @@ u32 __get_MEPC(void)
+  */
+ void __set_MXSTATUS(u32 mxstatus)
+ {
+-__asm volatile("csrw mxstatus, %0" : : "r"(mxstatus));
++__asm volatile("csrw 0x7c0, %0" : : "r"(mxstatus));
+ }
+ 
+ /**
+@@ -112,7 +125,7 @@ void __set_MXSTATUS(u32 mxstatus)
+  */
+ void __set_MEXSTATUS(u32 mexstatus)
+ {
+-__asm volatile("csrw mexstatus, %0" : : "r"(mexstatus));
++__asm volatile("csrw 0x7e1, %0" : : "r"(mexstatus));
+ }
+ 
+ /**
+@@ -147,7 +160,7 @@ u32 __get_MHCR(void)
+ {
+ u32 result;
+ 
+-__asm volatile("csrr %0, mhcr" : "=r"(result));
++__asm volatile("csrr %0, 0x7c1" : "=r"(result));
+ return result;
+ }
+ 
+@@ -158,7 +171,7 @@ u32 __get_MHCR(void)
+  */
+ void __set_MHCR(u32 mhcr)
+ {
+-__asm volatile("csrw mhcr, %0" : : "r"(mhcr));
++__asm volatile("csrw 0x7c1, %0" : : "r"(mhcr));
+ }
+ 
+ /**
+@@ -237,7 +250,7 @@ u32 __get_MTVEC(void)
+  */
+ void __set_MTVT(u32 mtvt)
+ {
+-__asm volatile("csrw mtvt, %0" : : "r"(mtvt));
++__asm volatile("csrw 0x307, %0" : : "r"(mtvt));
+ }
+ 
+ /**
+@@ -249,7 +262,7 @@ void __set_MTVT(u32 mtvt)
+ {
+ u32 result;
+ 
+-__asm volatile("csrr %0, mtvt" : "=r"(result));
++__asm volatile("csrr %0, 0x307" : "=r"(result));
+ return result;
+ }
+ 
+@@ -321,7 +334,7 @@ u32 __get_MNXTI(void)
+ {
+ u32 result;
+ 
+-__asm volatile("csrr %0, mnxti" : "=r"(result));
++__asm volatile("csrr %0, 0x345" : "=r"(result));
+ return result;
+ }
+ 
+@@ -332,7 +345,7 @@ u32 __get_MNXTI(void)
+  */
+ void __set_MNXTI(u32 mnxti)
+ {
+-__asm volatile("csrw mnxti, %0" : : "r"(mnxti));
++__asm volatile("csrw 0x345, %0" : : "r"(mnxti));
+ }
+ 
+ /**
+@@ -344,7 +357,7 @@ u32 __get_MINTSTATUS(void)
+ {
+ u32 result;
+ 
+-__asm volatile("csrr %0, mintstatus" : "=r"(result));
++__asm volatile("csrr %0, 0x346" : "=r"(result));
+ return result;
+ }
+ 

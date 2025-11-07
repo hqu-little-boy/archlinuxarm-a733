@@ -1,0 +1,19 @@
+--- a/Makefile
++++ b/Makefile
+@@ -73,6 +73,7 @@ CFLAGS += $(CFLAGS-y)
+ CFLAGS += -Iinclude/generated
+ CFLAGS += -include include/generated/autoconf.h
+ CFLAGS += -include conf.h
++CFLAGS += -isystem /opt/xpack/riscv-none-elf-gcc/riscv-none-elf/include
+ # CFLAGS += -D"SUB_VER=BUILD_STR($(SUB_VER))"
+ # CFLAGS += -D"SUB_VER=$(SUB_VER)"
+ 
+@@ -187,7 +188,7 @@ fixdep : $(CURDIR)/scripts/basic/fixdep.c
+ 	$(Q)gcc $^ -o $(if $(OUTPUT),$(OUTPUT:%/=%)/fixdep,$@)
+ 
+ #compiler config options
+-CFLAGS  += -g -c -nostdlib -Wall -Werror -Os $(MARCH_FLAGS)
++CFLAGS  += -g -c -nostdlib -Wall -Wno-error=builtin-declaration-mismatch -Os -std=gnu11 -ffreestanding $(MARCH_FLAGS)
+ 
+ #linker config options
+ LD_FLAGS= --stats -T$(LINK_RAM-y) -e 0x100 $(MARCH_LD_FLAGS)

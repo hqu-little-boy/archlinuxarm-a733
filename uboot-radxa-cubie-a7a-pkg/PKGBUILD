@@ -1,0 +1,232 @@
+# U-Boot: Radxa Cubie A7A (Allwinner A733)
+# Maintainer: hqu-little-boy <zengpf.wang@gmail.com>
+
+pkgname=uboot-radxa-cubie-a7a
+pkgver=2018.07
+pkgrel=1
+_commit_main=eac9c7cba11811131761ef2daa6bcab81ced04a3
+_repo_main=radxa-pkg
+_commit_arisc=d463b9da43dc50320f21ba51c6c51afe2db20d83
+_commit_awbs=cd83e8861013b7707df4475d0c9e2c8103021078
+_commit_device_a527=ea1a7fdf0c091754a4b79d0806cc40ddc66e52ad
+_commit_device_a733=215855f9330ca6234927e3f9005d794174a42294
+_commit_dramlib=35e84c835b26f8d933e50299869657365e996363
+_commit_spl_pub=8f30b7df85315222dd28b6e2ff4dbfa6d7dbabe8
+_commit_src=56bb8c6a2ea55b301ec18d36aeff82efc239aff1
+_commit_tools=2c5370f4574f2cf67512cf16000d55947cc9b82c
+
+pkgdesc="U-Boot for Radxa Cubie A7A (Allwinner A733) - Built from source"
+arch=('any')
+url='https://github.com/radxa-pkg/u-boot-aw2501'
+license=('GPL2')
+makedepends=(
+    'bc'
+    'dtc'
+    'arm-linux-gnueabihf-gcc'
+    'python'
+    'swig'
+    'util-linux'
+    'dos2unix'
+)
+provides=('uboot-radxa-cubie-a7a')
+conflicts=('uboot-radxa-cubie-a7a')
+install=${pkgname}.install
+
+source=(
+    # Main repository - GitHub
+    "u-boot-aw2501-${_commit_main}.tar.gz::https://github.com/${_repo_main}/u-boot-aw2501/archive/${_commit_main}.tar.gz"
+    
+    # Submodule: arisc - GitLab
+    "arisc-${_commit_arisc}.tar.gz::https://gitlab.com/tina5.0_aiot/lichee/arisc/-/archive/${_commit_arisc}/arisc-${_commit_arisc}.tar.gz"
+    
+    # Submodule: awbs - GitHub
+    "awbs-${_commit_awbs}.tar.gz::https://github.com/radxa/awbs/archive/${_commit_awbs}.tar.gz"
+    
+    # Submodule: device-a527 - GitHub (allwinner-device repo)
+    "allwinner-device-${_commit_device_a527}.tar.gz::https://github.com/radxa/allwinner-device/archive/${_commit_device_a527}.tar.gz"
+    
+    # Submodule: device-a733 - GitHub (allwinner-device repo)
+    "allwinner-device-${_commit_device_a733}.tar.gz::https://github.com/radxa/allwinner-device/archive/${_commit_device_a733}.tar.gz"
+    
+    # Submodule: dramlib - GitLab
+    "dramlib-${_commit_dramlib}.tar.gz::https://gitlab.com/tina5.0_aiot/lichee/dramlib/-/archive/${_commit_dramlib}/dramlib-${_commit_dramlib}.tar.gz"
+    
+    # Submodule: spl-pub - GitLab
+    "spl-pub-${_commit_spl_pub}.tar.gz::https://gitlab.com/tina5.0_aiot/lichee/brandy-2.0/spl-pub/-/archive/${_commit_spl_pub}/spl-pub-${_commit_spl_pub}.tar.gz"
+    
+    # Submodule: src (u-boot) - GitHub
+    "u-boot-${_commit_src}.tar.gz::https://github.com/radxa/u-boot/archive/${_commit_src}.tar.gz"
+    
+    # Submodule: tools - GitLab
+    "tools-${_commit_tools}.tar.gz::https://gitlab.com/tina5.0_aiot/lichee/tools/-/archive/${_commit_tools}/tools-${_commit_tools}.tar.gz"
+    
+    # Patches
+    '0001-makefile-environment-variable-toolchain.patch'
+    '0002-arisc-makefile-environment-variable-toolchain.patch'
+    '0003-arisc-remove-mtune-e906.patch'
+    '0004-arisc-add-zicsr-extension.patch'
+    '0005-arisc-c11-standard-and-newlib.patch'
+    '0006-compiler-version-header.patch'
+    '0007-crt0-csr-numeric-address.patch'
+    '0008-e907_com-csr-numeric-addresses.patch'
+    'csr_compat.h'
+)
+
+sha256sums=('SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP')
+
+prepare() {
+    cd "${srcdir}/u-boot-aw2501-${_commit_main}"
+    
+    msg2 "Setting up submodules..."
+    
+    # Extract and link submodules
+    rm -rf arisc awbs device-a527 device-a733 dramlib spl-pub src tools
+    
+    # Link submodules to extracted archives
+    ln -sf "${srcdir}/arisc-${_commit_arisc}" arisc
+    ln -sf "${srcdir}/awbs-${_commit_awbs}" awbs
+    ln -sf "${srcdir}/allwinner-device-${_commit_device_a527}" device-a527
+    ln -sf "${srcdir}/allwinner-device-${_commit_device_a733}" device-a733
+    ln -sf "${srcdir}/dramlib-${_commit_dramlib}" dramlib
+    ln -sf "${srcdir}/spl-pub-${_commit_spl_pub}" spl-pub
+    ln -sf "${srcdir}/u-boot-${_commit_src}" src
+    ln -sf "${srcdir}/tools-${_commit_tools}" tools
+    
+    msg2 "Applying patches..."
+    
+    # Patch main Makefile for environment variable toolchain
+    patch -p1 -i "${srcdir}/0001-makefile-environment-variable-toolchain.patch"
+    
+    # Patch ARISC ar100s Makefile - apply in arisc/ar100s directory
+    cd "${srcdir}/arisc-${_commit_arisc}/ar100s"
+    patch -p1 -i "${srcdir}/0002-arisc-makefile-environment-variable-toolchain.patch"
+    patch -p1 -i "${srcdir}/0003-arisc-remove-mtune-e906.patch"
+    patch -p1 -i "${srcdir}/0004-arisc-add-zicsr-extension.patch"
+    patch -p1 -i "${srcdir}/0005-arisc-c11-standard-and-newlib.patch"
+    
+    # Copy CSR compatibility header
+    mkdir -p arch/riscv/includes
+    cp "${srcdir}/csr_compat.h" arch/riscv/includes/
+    
+    cd "${srcdir}/u-boot-aw2501-${_commit_main}"
+    
+    # Patch U-Boot source
+    cd "${srcdir}/u-boot-${_commit_src}"
+    patch -p1 -i "${srcdir}/0006-compiler-version-header.patch"
+    
+    # Fix DTS include paths
+    # The DTS files try to include from ../../../../device-a733 which doesn't work
+    # because src/ is a symlink. Copy device configs to u-boot source directory.
+    msg2 "Copying device configs to u-boot directory..."
+    cp -r "${srcdir}/allwinner-device-${_commit_device_a733}" device-a733
+    cp -r "${srcdir}/allwinner-device-${_commit_device_a527}" device-a527
+    
+    # Fix DTS include paths to use local copies
+    msg2 "Fixing DTS include paths..."
+    sed -i 's|../../../../device-a733|../../../device-a733|g' arch/arm/dts/*.dts
+    sed -i 's|../../../../device-a527|../../../device-a527|g' arch/arm/dts/*.dts
+    
+    # Patch ARISC E907 code - apply in arisc/ar100s directory
+    cd "${srcdir}/arisc-${_commit_arisc}/ar100s"
+    patch -p1 -i "${srcdir}/0007-crt0-csr-numeric-address.patch"
+    
+    # Use sed to replace CSR names with numeric values in e907_com.c
+    msg2 "Replacing T-Head CSR names with numeric addresses..."
+    sed -i 's/csrr %0, mxstatus/csrr %0, 0x7c0/g' arch/riscv/cpu/e907/e907_com.c
+    sed -i 's/csrw mxstatus, %0/csrw 0x7c0, %0/g' arch/riscv/cpu/e907/e907_com.c
+    sed -i 's/csrr %0, mexstatus/csrr %0, 0x7e1/g' arch/riscv/cpu/e907/e907_com.c
+    sed -i 's/csrw mexstatus, %0/csrw 0x7e1, %0/g' arch/riscv/cpu/e907/e907_com.c
+    sed -i 's/csrr %0, mhcr/csrr %0, 0x7c1/g' arch/riscv/cpu/e907/e907_com.c
+    sed -i 's/csrw mhcr, %0/csrw 0x7c1, %0/g' arch/riscv/cpu/e907/e907_com.c
+    sed -i 's/csrr %0, mtvt/csrr %0, 0x307/g' arch/riscv/cpu/e907/e907_com.c
+    sed -i 's/csrw mtvt, %0/csrw 0x307, %0/g' arch/riscv/cpu/e907/e907_com.c
+    sed -i 's/csrr %0, mnxti/csrr %0, 0x345/g' arch/riscv/cpu/e907/e907_com.c
+    sed -i 's/csrw mnxti, %0/csrw 0x345, %0/g' arch/riscv/cpu/e907/e907_com.c
+    sed -i 's/csrr %0, mintstatus/csrr %0, 0x346/g' arch/riscv/cpu/e907/e907_com.c
+    
+    cd "${srcdir}/u-boot-aw2501-${_commit_main}"
+    
+    # Create git tag for version
+    cd src
+    git init
+    git config user.email "builder@archlinux.org"
+    git config user.name "Builder"
+    git add .
+    git commit -m "Initial commit"
+    git tag -a v2018.07 -m "U-Boot 2018.07"
+}
+
+build() {
+    cd "${srcdir}/u-boot-aw2501-${_commit_main}"
+    
+    msg2 "Building U-Boot for Radxa Cubie A7A..."
+    
+    # Unset conflicting flags
+    unset CFLAGS
+    unset CXXFLAGS
+    unset CPPFLAGS
+    unset LDFLAGS
+    
+    # Set toolchain paths
+    export CROSS_COMPILE=arm-linux-gnueabihf-
+    export RISCV_CROSS_COMPILE=/opt/xpack/riscv-none-elf-gcc/bin/riscv-none-elf-
+    export PATH="/opt/xpack/riscv-none-elf-gcc/bin:$PATH"
+    
+    # Set ARISC defconfig for sun60iw2p1 (A733)
+    export LICHEE_ARISC_DEFCONFIG=sun60iw2p1_defconfig
+    export CFG_CHIP_PLATFORM='"sun60iw2p1"'
+    
+    # Build everything
+    make radxa-cubie-a7a
+}
+
+package() {
+    cd "${srcdir}/u-boot-aw2501-${_commit_main}"
+    
+    msg2 "Installing U-Boot files..."
+    
+    # Create installation directories - match official DEB structure
+    install -d "${pkgdir}/usr/lib/u-boot/radxa-cubie-a7a"
+    
+    # Install U-Boot components (required)
+    install -m644 out/radxa-cubie-a7a/boot0_sdcard.bin "${pkgdir}/usr/lib/u-boot/radxa-cubie-a7a/"
+    install -m644 out/radxa-cubie-a7a/boot_package.fex "${pkgdir}/usr/lib/u-boot/radxa-cubie-a7a/"
+    
+    # Install optional components if they exist
+    if [[ -f out/radxa-cubie-a7a/boot0_spinor.bin ]]; then
+        install -m644 out/radxa-cubie-a7a/boot0_spinor.bin "${pkgdir}/usr/lib/u-boot/radxa-cubie-a7a/"
+    fi
+    if [[ -f out/radxa-cubie-a7a/boot0_ufs.bin ]]; then
+        install -m644 out/radxa-cubie-a7a/boot0_ufs.bin "${pkgdir}/usr/lib/u-boot/radxa-cubie-a7a/"
+    fi
+    if [[ -f out/radxa-cubie-a7a/sys_partition_nor.bin ]]; then
+        install -m644 out/radxa-cubie-a7a/sys_partition_nor.bin "${pkgdir}/usr/lib/u-boot/radxa-cubie-a7a/"
+    fi
+    
+    # Install setup scripts
+    if [[ -f out/radxa-cubie-a7a/setup.sh ]]; then
+        install -m755 out/radxa-cubie-a7a/setup.sh "${pkgdir}/usr/lib/u-boot/radxa-cubie-a7a/"
+    fi
+    if [[ -f out/radxa-cubie-a7a/setup.ps1 ]]; then
+        install -m644 out/radxa-cubie-a7a/setup.ps1 "${pkgdir}/usr/lib/u-boot/radxa-cubie-a7a/"
+    fi
+    
+    msg2 "Installation complete!"
+}
