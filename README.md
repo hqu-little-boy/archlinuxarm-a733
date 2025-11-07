@@ -6,7 +6,7 @@
 
 This repository contains Arch Linux ARM packages for the **Radxa Cubie A7A** single-board computer powered by the Allwinner A733 SoC.
 
-> **中文说明** | 本仓库包含适用于 **Radxa Cubie A7A** 单板计算机的 Arch Linux ARM 软件包，该设备搭载全志 A733 SoC。
+> ** 中文说明 ** | 本仓库包含适用于 **Radxa Cubie A7A** 单板计算机的 Arch Linux ARM 软件包，该设备搭载全志 A733 SoC。
 
 ## Overview
 
@@ -18,15 +18,15 @@ The Radxa Cubie A7A is a compact single-board computer featuring:
 - **Storage**: eMMC 5.1, microSD card
 - **Networking**: WiFi 6, Bluetooth 5.2, Gigabit Ethernet
 
-## 概述
+## 概述 
 
 Radxa Cubie A7A 是一款紧凑型单板计算机，主要特性包括：
 - **SoC**: 全志 A733 (ARM Cortex-A53 + RISC-V E902)
-- **架构**: ARM64 (aarch64)
+- ** 架构 **: ARM64 (aarch64)
 - **GPU**: ARM Mali-G31 MP2
-- **内存**: 最高 4GB LPDDR4X
-- **存储**: eMMC 5.1, microSD 卡
-- **网络**: WiFi 6, 蓝牙 5.2, 千兆以太网
+- ** 内存 **: 最高 4GB LPDDR4X
+- ** 存储 **: eMMC 5.1, microSD 卡
+ —  ** 网络 **: WiFi 6, 蓝牙 5.2, 千兆以太网
 
 ## Package Structure
 
