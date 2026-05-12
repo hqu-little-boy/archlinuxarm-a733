@@ -4,7 +4,7 @@
  CFLAGS += -Iinclude/generated
  CFLAGS += -include include/generated/autoconf.h
  CFLAGS += -include conf.h
-+CFLAGS += -isystem /opt/xpack/riscv-none-elf-gcc/riscv-none-elf/include
++CFLAGS += -isystem /usr/riscv64-elf/include/
  # CFLAGS += -D"SUB_VER=BUILD_STR($(SUB_VER))"
  # CFLAGS += -D"SUB_VER=$(SUB_VER)"
  
